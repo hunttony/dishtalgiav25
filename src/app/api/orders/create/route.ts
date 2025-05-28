@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { ObjectId } from 'mongodb';
 import { authOptions } from '@/lib/auth';
-import clientPromise from '@/lib/mongodb';
+import { clientPromise } from '@/lib/mongodb';
 import { Order } from '@/models/Order';
 
 function generateOrderNumber() {
@@ -41,8 +42,10 @@ export async function POST(request: Request) {
       orderNumber: generateOrderNumber(),
       userEmail: session.user.email,
       items: items.map(item => ({
+        _id: new ObjectId().toString(),
         productId: item.productId,
         productName: item.productName,
+        name: item.productName, // Required by OrderItem interface
         sizeId: item.sizeId,
         sizeName: item.sizeName,
         price: item.price,
