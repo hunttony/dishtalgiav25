@@ -11,11 +11,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { FiShoppingCart, FiPackage, FiSettings, FiLogOut, FiChevronDown } from 'react-icons/fi';
 import { CartItem } from '@/types';
 
-// Simple loading spinner component
-const LoadingSpinner = () => (
-  <div className="animate-spin h-5 w-5 border-2 border-t-chocolate-brown rounded-full" />
-);
-
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
