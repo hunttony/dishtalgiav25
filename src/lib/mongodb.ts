@@ -24,7 +24,7 @@ declare global {
   };
 }
 
-let cached = global.mongo || { conn: null, promise: null };
+const cached = global.mongo || { conn: null, promise: null };
 
 if (!global.mongo) {
   global.mongo = cached;
