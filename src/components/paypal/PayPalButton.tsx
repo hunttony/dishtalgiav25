@@ -117,7 +117,7 @@ const PayPalButton = ({
     }
   };
 
-  const onApprove = async (data: OnApproveData, actions: OnApproveActions) => {
+  const onApprove = async (_: OnApproveData, actions: OnApproveActions) => {
     try {
       setIsProcessing(true);
       setError(null);
