@@ -7,7 +7,6 @@ import { useCart } from '@/contexts/CartContext';
 import { useSession } from 'next-auth/react';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 
 interface PayPalButtonProps {
   amount: number;
