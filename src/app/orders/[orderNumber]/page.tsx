@@ -229,7 +229,7 @@ export default function OrderDetailsPage() {
                     <p className="text-sm font-medium text-gray-500">Shipping Address</p>
                     <p className="mt-1 text-sm text-gray-900">
                       {order.shippingAddress.name}<br />
-                      {order.shippingAddress.address}<br />
+                      {order.shippingAddress.street}<br />
                       {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}<br />
                       {order.shippingAddress.country}
                     </p>
