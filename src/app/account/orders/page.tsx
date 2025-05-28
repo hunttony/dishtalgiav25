@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { 
   FiPackage, 
   FiCalendar, 
-  FiDollarSign, 
   FiArrowRight, 
   FiAlertCircle, 
   FiClock,
@@ -15,8 +14,6 @@ import {
   FiLoader
 } from 'react-icons/fi';
 import { format } from 'date-fns';
-import PayPalButton from '@/components/paypal/PayPalButton';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/utils';
 
