@@ -8,7 +8,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
-import { FiShoppingCart, FiX, FiPackage, FiSettings, FiLogOut, FiChevronDown } from 'react-icons/fi';
+import { FiShoppingCart, FiPackage, FiSettings, FiLogOut, FiChevronDown } from 'react-icons/fi';
 import { CartItem } from '@/types';
 
 // Simple loading spinner component
