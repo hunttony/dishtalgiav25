@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { FiMail, FiUser } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface GuestCheckoutProps {
   onCheckout: (guestInfo: { name: string; email: string }) => void;
