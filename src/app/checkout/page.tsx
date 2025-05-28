@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import PayPalButton from '../../components/paypal/PayPalButton';
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, clearCart } = useCart();
+  const { getCartTotal, clearCart } = useCart();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -36,6 +36,18 @@ export default function CheckoutPage() {
   const handlePayPalCancel = () => {
     setIsProcessing(false);
   };
+
+  if (isProcessing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream-beige">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-soft-red mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold text-chocolate-brown mb-2">Processing Payment</h1>
+          <p className="text-gray-600">Please wait while we process your payment...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
