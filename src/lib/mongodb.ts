@@ -37,7 +37,12 @@ export async function connectToDatabase(): Promise<CachedConnection> {
 
   if (!cached.promise) {
     const opts: MongoClientOptions = {
-      // Add any additional options here
+      tls: true,
+      retryWrites: true,
+      w: 'majority',
+      retryReads: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000
     };
 
     cached.promise = MongoClient.connect(MONGODB_URI, opts).then((client) => {
