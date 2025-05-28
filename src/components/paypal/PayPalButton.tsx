@@ -65,7 +65,7 @@ const PayPalButton = ({
   const { cartItems } = useCart();
   const { data: session } = useSession();
 
-  const createOrder = async (data: CreateOrderData, actions: CreateOrderActions) => {
+  const createOrder = async (_: CreateOrderData, actions: CreateOrderActions) => {
     try {
       if (!session) {
         throw new Error('You must be logged in to complete this purchase');
