@@ -3,6 +3,7 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { CartItem } from '@/types';
 
 type CartDrawerProps = {
   isOpen: boolean;
@@ -11,7 +12,7 @@ type CartDrawerProps = {
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   // In a real app, you would fetch cart items from a context or state
-  const cartItems = []; // Replace with actual cart items
+  const cartItems: CartItem[] = []; // Replace with actual cart items
   const cartTotal = 0; // Replace with actual total
 
   return (
@@ -96,11 +97,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           ) : (
                             <ul role="list" className="-my-6 divide-y divide-gray-200">
                               {cartItems.map((item) => (
-                                <li key={item.id} className="flex py-6">
+                                <li key={`${item.productId}-${item.sizeId}`} className="flex py-6">
                                   <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                     <img
-                                      src={item.imageSrc}
-                                      alt={item.imageAlt}
+                                      src={item.image}
+                                      alt={item.productName}
                                       className="h-full w-full object-cover object-center"
                                     />
                                   </div>
@@ -109,11 +110,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                     <div>
                                       <div className="flex justify-between text-base font-medium text-gray-900">
                                         <h3>
-                                          <a href={item.href}>{item.name}</a>
+                                          <a href={`/products/${item.productId}`}>{item.productName}</a>
                                         </h3>
-                                        <p className="ml-4">{item.price}</p>
+                                        <p className="ml-4">${item.price.toFixed(2)}</p>
                                       </div>
-                                      <p className="mt-1 text-sm text-gray-500">{item.flavor}</p>
+                                      <p className="mt-1 text-sm text-gray-500">{item.sizeName}</p>
                                     </div>
                                     <div className="flex flex-1 items-end justify-between text-sm">
                                       <p className="text-gray-500">Qty {item.quantity}</p>
