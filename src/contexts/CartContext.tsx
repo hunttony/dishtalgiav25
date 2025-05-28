@@ -16,21 +16,6 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Sample product data - in a real app, this would come from an API
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Original Banana Pudding',
-    slug: 'original-banana-pudding',
-    sizes: [
-      { id: 'regular', name: 'Regular', price: 12.99 },
-      { id: 'family', name: 'Family', price: 28.00 },
-      { id: 'pan', name: 'Pan', price: 100.00 },
-    ],
-    image: '/images/original-pudding.jpg',
-  },
-  // Add other products here
-];
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
