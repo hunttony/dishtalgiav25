@@ -9,8 +9,6 @@ const registerSchema = z.object({
   password: z.string().min(6),
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
