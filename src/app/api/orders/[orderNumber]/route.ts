@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { clientPromise } from '@/lib/mongodb';
 
 export async function GET(
-  request: Request,
+  _: Request,
   { params }: { params: { orderNumber: string } }
 ) {
   try {
