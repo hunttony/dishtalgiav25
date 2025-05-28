@@ -7,7 +7,7 @@ import { FiPackage, FiTruck, FiCheckCircle, FiClock, FiArrowLeft } from 'react-i
 import { Order } from '@/models/Order';
 
 export default function OrderDetailsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const params = useParams();
   const orderNumber = params?.orderNumber as string;
