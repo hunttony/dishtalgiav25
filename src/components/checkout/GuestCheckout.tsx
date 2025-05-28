@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FiMail, FiUser } from 'react-icons/fi';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +15,6 @@ export default function GuestCheckout({ onCheckout }: GuestCheckoutProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
