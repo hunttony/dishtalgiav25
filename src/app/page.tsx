@@ -1,103 +1,193 @@
-import Image from "next/image";
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+
+// Sample product data - in a real app, this would come from an API or CMS
+const featuredProducts = [
+  {
+    id: 1,
+    name: "Original Banana Pudding",
+    description: "Classic Southern comfort with creamy vanilla pudding, ripe bananas, and crunchy Nilla wafers.",
+    price: 8.00,
+    slug: "original",
+    image: "/images/original-pudding.jpg"
+  },
+  {
+    id: 2,
+    name: "Bananas Foster Pudding",
+    description: "A decadent twist with caramelized bananas, rum-infused sauce, and a graham cracker crust.",
+    price: 10.00,
+    slug: "bananas-foster",
+    image: "/images/dishtalgia-2.webp"
+  },
+  {
+    id: 3,
+    name: "Mississippi Mud Pudding",
+    description: "Rich chocolate pudding layered with cookie crumbles and whipped cream.",
+    price: 10.00,
+    slug: "mississippi-mud",
+    image: "/images/mississippi-mud.jpg"
+  }
+];
+
+// Sample testimonials
+const testimonials = [
+  {
+    id: 1,
+    quote: "The best banana pudding I've ever had! Takes me back to my childhood in the South.",
+    author: "Sarah M.",
+    location: "Houston, TX"
+  },
+  {
+    id: 2,
+    quote: "The Bananas Foster pudding is absolutely divine! Perfect balance of flavors.",
+    author: "James T.",
+    location: "Katy, TX"
+  },
+  {
+    id: 3,
+    quote: "My family can't get enough of the Mississippi Mud. We order it every week!",
+    author: "Maria G.",
+    location: "The Woodlands, TX"
+  }
+];
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center bg-cover bg-center" 
+               style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}>
+        <div className="absolute inset-0 bg-chocolate-brown/60 flex items-center justify-center">
+          <div className="text-center text-warm-white px-4 max-w-4xl">
+            <h1 className="text-4xl md:text-6xl font-playfair font-bold mb-6">
+              Indulge in Nostalgia
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
+              Handcrafted banana puddings that bring the taste of Southern comfort to your table.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/products" 
+                className="bg-soft-red hover:bg-golden-yellow text-warm-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300"
+              >
+                Shop Now
+              </Link>
+              <Link 
+                href="/about" 
+                className="border-2 border-warm-white hover:bg-warm-white/10 text-warm-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300"
+              >
+                Our Story
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-16 md:py-24 bg-cream-beige">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-playfair font-bold text-chocolate-brown mb-4">
+              Our Signature Puddings
+            </h2>
+            <div className="w-20 h-1 bg-golden-yellow mx-auto"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredProducts.map((product) => (
+              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                <div className="relative h-64 w-full">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-playfair font-bold text-chocolate-brown mb-2">
+                    {product.name}
+                  </h3>
+                  <p className="text-chocolate-brown/80 mb-4">
+                    {product.description}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-bold text-soft-red">
+                      ${product.price.toFixed(2)}
+                    </span>
+                    <Link 
+                      href={`/products/${product.slug}`}
+                      className="text-chocolate-brown hover:text-golden-yellow font-semibold transition-colors"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link 
+              href="/products" 
+              className="inline-block bg-chocolate-brown hover:bg-golden-yellow text-warm-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300"
+            >
+              View All Puddings
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-16 md:py-24 bg-chocolate-brown text-warm-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-playfair font-bold mb-4">
+              What Our Customers Say
+            </h2>
+            <div className="w-20 h-1 bg-golden-yellow mx-auto"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <div key={testimonial.id} className="bg-warm-white/10 p-6 rounded-lg">
+                <div className="text-golden-yellow text-4xl mb-4">"</div>
+                <p className="text-lg italic mb-4">{testimonial.quote}</p>
+                <div className="font-bold">{testimonial.author}</div>
+                <div className="text-sm text-warm-white/70">{testimonial.location}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-16 md:py-24 bg-soft-red text-warm-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-playfair font-bold mb-6">
+            Ready to Taste the Difference?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Order now and experience the taste of Southern comfort delivered to your door.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              href="/products" 
+              className="bg-warm-white text-soft-red hover:bg-chocolate-brown font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300"
+            >
+              Shop Now
+            </Link>
+            <Link 
+              href="/contact" 
+              className="border-2 border-warm-white hover:bg-warm-white/10 font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300"
+            >
+              Contact Us
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
