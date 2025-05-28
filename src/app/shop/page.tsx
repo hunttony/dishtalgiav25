@@ -88,7 +88,6 @@ const categories = [
   { id: 'seasonal', name: 'Seasonal Specials' },
 ];
 
-type Product = typeof products[0];
 
 export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
