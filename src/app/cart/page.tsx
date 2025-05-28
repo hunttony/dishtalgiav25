@@ -15,10 +15,10 @@ const paypalOptions = {
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const cartTotal = getCartTotal();
 
-  const createOrder = (data: any, actions: any) => {
+  const createOrder = (_data: unknown, actions: any) => {
     return actions.order.create({
       purchase_units: [{
         amount: {
@@ -42,7 +42,7 @@ export default function CartPage() {
     });
   };
 
-  const onApprove = async (data: any, actions: any) => {
+  const onApprove = async (_data: unknown, actions: any) => {
     setIsProcessing(true);
     try {
       await actions.order.capture();
@@ -217,14 +217,25 @@ export default function CartPage() {
                     </div>
                   </div>
                   
-                  <div className="rounded-md overflow-hidden">
+                  <div className="rounded-md overflow-hidden relative">
+                    {isProcessing && (
+                      <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-soft-red"></div>
+                      </div>
+                    )}
                     <PayPalScriptProvider options={paypalOptions}>
                       <PayPalButtons
-                        style={{ layout: 'horizontal', tagline: false, height: 48 }}
+                        disabled={isProcessing}
+                        style={{ 
+                          layout: 'horizontal', 
+                          tagline: false, 
+                          height: 48
+                        }}
                         createOrder={createOrder}
                         onApprove={onApprove}
                         onError={(err) => {
                           console.error('PayPal error:', err);
+                          setIsProcessing(false);
                           alert('Payment failed. Please try again or use another payment method.');
                         }}
                       />
