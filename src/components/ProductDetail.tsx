@@ -5,13 +5,6 @@ import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { Product } from '@/types';
 
-interface ProductSize {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-}
-
 interface ProductDetailProps {
   product: Product;
 }
