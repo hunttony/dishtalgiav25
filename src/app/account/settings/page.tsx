@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiSave, FiLogOut, FiLock, FiAlertCircle, FiLoader } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiLogOut, FiLock, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { User } from 'next-auth';
 
 interface Address {
   street: string;
