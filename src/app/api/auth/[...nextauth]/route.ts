@@ -13,12 +13,14 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      role?: string;
     };
   }
   interface User {
     id: string;
     name?: string | null;
     email?: string | null;
+    role?: string;
   }
 }
 
@@ -68,12 +70,14 @@ const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role; // Add role to the token
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string; // Add role to the session
       }
       return session;
     },
