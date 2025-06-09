@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FiFilter, FiX, FiStar, FiShoppingCart, FiPlus, FiMinus } from 'react-icons/fi';
 
 // Mock data - replace with your actual product data or API call
@@ -264,22 +264,32 @@ export default function ShopPage() {
           {sortedProducts.map((product) => (
             <div key={product.id} className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
               <div className="relative h-64 overflow-hidden">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                {!product.inStock && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="bg-white/90 text-chocolate-brown px-3 py-1 rounded-full text-sm font-medium">
-                      Out of Stock
-                    </span>
+                <div className="relative w-full h-full">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = '/images/placeholder-food.svg';
+                      target.classList.add('p-4'); // Add padding for the SVG
+                    }}
+                    unoptimized={process.env.NODE_ENV !== 'production'}
+                  />
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="bg-white/90 text-chocolate-brown px-3 py-1 rounded-full text-sm font-medium">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute top-3 right-3 bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+                    <FiStar className="mr-1" size={12} />
+                    {product.rating}
                   </div>
-                )}
-                <div className="absolute top-3 right-3 bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
-                  <FiStar className="mr-1" size={12} />
-                  {product.rating}
                 </div>
               </div>
               <div className="p-6 flex-grow flex flex-col">
@@ -356,6 +366,7 @@ export default function ShopPage() {
                       src={product.image}
                       alt={product.name}
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                     <div className="absolute -top-1 -right-1 bg-soft-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">

@@ -37,19 +37,37 @@ export async function connectToDatabase(): Promise<CachedConnection> {
 
   if (!cached.promise) {
     const opts: MongoClientOptions = {
+      // TLS/SSL Configuration
       tls: true,
       tlsAllowInvalidCertificates: false,
       tlsAllowInvalidHostnames: false,
-      retryWrites: true,
-      w: 'majority',
-      retryReads: true,
-      serverSelectionTimeoutMS: 10000,
+      
+      // Connection Timeouts
+      connectTimeoutMS: 10000,
       socketTimeoutMS: 30000,
-      ssl: true,
+      serverSelectionTimeoutMS: 30000,
+      
+      // Authentication
       authMechanism: 'DEFAULT',
       authSource: 'admin',
+      
+      // Connection Pooling
       maxPoolSize: 10,
-      minPoolSize: 1
+      minPoolSize: 1,
+      maxIdleTimeMS: 60000,
+      
+      // Retry Logic
+      retryWrites: true,
+      retryReads: true,
+      
+      // Read/Write Concerns
+      w: 'majority',
+      wtimeoutMS: 5000,
+      readPreference: 'primary',
+      
+      // Compression
+      compressors: ['zlib'],
+      zlibCompressionLevel: 7
     };
 
     cached.promise = MongoClient.connect(MONGODB_URI, opts).then((client) => {
