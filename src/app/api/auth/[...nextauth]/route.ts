@@ -29,6 +29,18 @@ const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise, {
     databaseName: process.env.MONGODB_DB,
   }) as Adapter,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' ? '.dishtalgia-v3.vercel.app' : undefined,
+      },
+    },
+  },
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -65,12 +77,18 @@ const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 * 30, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
-        token.role = user.role; // Add role to the token
+        token.role = user.role;
       }
       return token;
     },
@@ -87,6 +105,7 @@ const authOptions: NextAuthOptions = {
     error: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  useSecureCookies: process.env.NODE_ENV === 'production',
   debug: process.env.NODE_ENV === 'development',
 };
 

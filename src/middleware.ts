@@ -5,13 +5,25 @@ import { getToken } from 'next-auth/jwt';
 // List of allowed origins
 const allowedOrigins = [
   'https://dishtalgia.vercel.app',
+  'https://dishtalgia-v3.vercel.app',
   'http://localhost:3000',
-  // Add other domains as needed
+  'http://localhost:3004',
 ];
 
 export async function middleware(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
-  const token = await getToken({ req: request });
+  
+  // Get token with secure cookie settings
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production',
+  });
+  
+  // Log token for debugging (remove in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Token in middleware:', !!token);
+  }
   
   // Handle CORS for API routes
   if (pathname.startsWith('/api/')) {
@@ -48,13 +60,26 @@ export async function middleware(request: NextRequest) {
   // If it's a protected route and user is not authenticated, redirect to login
   if (isProtectedRoute && !token) {
     const url = new URL('/login', origin);
-    url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
+    // Only set callbackUrl if it's not already set to prevent redirect loops
+    if (pathname !== '/login' && !pathname.startsWith('/auth/')) {
+      url.searchParams.set('callbackUrl', pathname);
+    }
+    const response = NextResponse.redirect(url);
+    // Ensure cookies are properly set for the redirect
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    return response;
   }
 
-  // If user is authenticated and tries to access auth routes, redirect to home
+  // If user is authenticated and tries to access auth routes, redirect to home or callback URL
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/', origin));
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl');
+    const redirectUrl = callbackUrl && !callbackUrl.startsWith('/auth/') 
+      ? new URL(callbackUrl, origin).toString()
+      : new URL('/', origin).toString();
+    
+    const response = NextResponse.redirect(new URL(redirectUrl, origin));
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    return response;
   }
 
   return NextResponse.next();
