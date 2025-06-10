@@ -2,6 +2,29 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+// List of public paths that don't require authentication
+const publicPaths = [
+  '/',
+  '/login',
+  '/auth/register',
+  '/forgot-password',
+  '/products',
+  '/about',
+  '/contact',
+  '/api/auth/signin',
+  '/api/auth/signout',
+  '/api/auth/session',
+  '/api/auth/csrf',
+  '/api/auth/providers',
+];
+
+// Check if the path is public
+const isPublicPath = (path: string) => {
+  return publicPaths.some(publicPath => 
+    path === publicPath || path.startsWith(`${publicPath}/`)
+  );
+};
+
 // List of allowed origins
 const allowedOrigins = [
   'https://dishtalgia.vercel.app',
@@ -13,6 +36,11 @@ const allowedOrigins = [
 export async function middleware(request: NextRequest) {
   const { pathname, origin } = request.nextUrl;
   
+  // Skip middleware for public paths
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+  
   // Get token with secure cookie settings
   const token = await getToken({ 
     req: request,
@@ -22,7 +50,7 @@ export async function middleware(request: NextRequest) {
   
   // Log token for debugging (remove in production)
   if (process.env.NODE_ENV === 'development') {
-    console.log('Token in middleware:', !!token);
+    console.log('Middleware - Path:', pathname, '| Authenticated:', !!token);
   }
   
   // Handle CORS for API routes
@@ -46,6 +74,16 @@ export async function middleware(request: NextRequest) {
       });
     }
 
+    // Protect API routes that require authentication
+    if (pathname.startsWith('/api/account') || pathname.startsWith('/api/admin')) {
+      if (!token) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Authentication required' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     return response;
   }
   
@@ -67,6 +105,7 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(url);
     // Ensure cookies are properly set for the redirect
     response.headers.set('Cache-Control', 'no-store, max-age=0');
+    response.headers.set('X-Auth-Required', 'true');
     return response;
   }
 
@@ -89,12 +128,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|images).*)',
+    '/((?!_next/static|_next/image|favicon.ico|images|sw.js|workbox-*.js).*)',
   ],
 };
