@@ -42,53 +42,81 @@ export default function CartPage() {
     });
   };
 
-  const onApprove = async (_data: unknown, actions: any) => {
+  const onApprove = async (data: any, actions: any) => {
     setIsProcessing(true);
     try {
-      const order = await actions.order.capture();
-      // Extract the order ID from the PayPal response
-      const orderId = order.purchase_units?.[0]?.payments?.captures?.[0]?.id || 
-                    order.purchase_units?.[0]?.payments?.authorizations?.[0]?.id ||
-                    Date.now().toString();
-      
-      // Save order to database
-      const response = await fetch('/api/orders', {
+      // 1. First create the order in the database
+      const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderNumber: orderId,
           items: items.map(item => ({
             productId: item.productId,
             productName: item.productName,
             sizeId: item.sizeId,
             sizeName: item.sizeName,
-            quantity: item.quantity,
             price: item.price,
+            quantity: item.quantity,
             image: item.image
           })),
-          subtotal: cartTotal,
-          tax: cartTotal * 0.08, // 8% tax rate
-          total: cartTotal * 1.08,
-          status: 'completed',
-          paymentMethod: 'paypal',
-          paymentStatus: 'paid',
-          paymentId: order.id
+          paymentId: data.orderID
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save order');
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json();
+        throw new Error(errorData.error || 'Failed to create order');
       }
 
-      // Clear cart and redirect to success page with order number
+      const { orderId, orderNumber } = await orderResponse.json();
+
+      // 2. Then capture the payment
+      const details = await actions.order.capture();
+      
+      // 3. Update the order with payment details
+      const updateResponse = await fetch('/api/orders/update-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          paymentDetails: details,
+          paymentStatus: details.status || 'completed'
+        })
+      });
+
+      if (!updateResponse.ok) {
+        console.error('Failed to update order with payment details');
+        // Non-critical error, continue since the order was created and payment captured
+      }
+
+      // 4. Clear cart and redirect to success page
       clearCart();
-      window.location.href = `/checkout/success?order=${orderId}`;
+      window.location.href = `/checkout/success?order=${orderNumber}`;
+      
     } catch (error) {
-      console.error('Payment failed:', error);
-      alert('Payment was successful but there was an error saving your order. Please contact support with your PayPal transaction ID.');
-      window.location.href = '/checkout/success';
+      console.error('Payment processing failed:', error);
+      
+      // Notify admin about the failed order
+      try {
+        await fetch('/api/admin/notify-failed-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paypalOrderId: data?.orderID,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (e) {
+        console.error('Failed to log failed order:', e);
+      }
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Payment processing failed';
+      alert(`Payment processing failed: ${errorMessage}. Please try again or contact support.`);
+      
     } finally {
       setIsProcessing(false);
     }

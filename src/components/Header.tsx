@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -27,9 +27,9 @@ export default function Header() {
   // Initialize state after hydration
   const [hasMounted, setHasMounted] = useState(false);
 
-  // Memoize cart calculations
-  const cartItems = useMemo(() => getItemCount(), []);
-  const cartTotal = useMemo(() => getCartTotal(), []);
+  // Calculate cart items and total - removing memoization to ensure updates
+  const cartItems = getItemCount();
+  const cartTotal = getCartTotal();
 
   // Handle hydration and cart updates
   useEffect(() => {
@@ -317,14 +317,14 @@ export default function Header() {
                         >
                           View Cart
                         </Link>
-                        <Link
+                        {/* <Link
                           href="/checkout"
                           className="bg-soft-red text-white hover:bg-chocolate-brown transition-colors py-2 px-4 rounded-md text-center text-sm font-medium"
                           onClick={() => setIsCartDropdownOpen(false)}
                           role="menuitem"
                         >
                           Checkout
-                        </Link>
+                        </Link> */}
                       </div>
                     </div>
                   )}
