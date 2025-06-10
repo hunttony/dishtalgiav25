@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
-import { authOptions } from '@/lib/auth';
-import { getDb } from '@/lib/mongodb';
+import { authOptions } from '../../../../lib/auth';
+import { getDb } from '../../../../lib/mongodb';
 
 export async function POST(req: Request) {
   try {
