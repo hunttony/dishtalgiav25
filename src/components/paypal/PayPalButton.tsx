@@ -1,154 +1,215 @@
 'use client';
 
 import { PayPalButtons, usePayPalScriptReducer, PayPalScriptProvider } from '@paypal/react-paypal-js';
-import type { CreateOrderData, CreateOrderActions, OnApproveData, OnApproveActions } from '@paypal/paypal-js';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useSession } from 'next-auth/react';
-import LoadingSpinner from '../ui/LoadingSpinner';
+import { toast } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+
+// Placeholder for LoadingSpinner (replace with actual implementation)
+const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: string }> = ({ size, className }) => (
+  <div className={`spinner ${size} ${className}`}>Loading...</div>
+);
+
+// Placeholder for PayPalScriptErrorHandler (replace with actual implementation)
+const PayPalScriptErrorHandler: React.FC<{ onError: (err: Error) => void }> = ({ onError }) => {
+  const [{ isRejected }] = usePayPalScriptReducer();
+  useEffect(() => {
+    if (isRejected) {
+      onError(new Error('Failed to load PayPal script'));
+    }
+  }, [isRejected, onError]);
+  return null;
+};
 
 interface PayPalButtonProps {
   amount: number;
   currency?: string;
-  onSuccess: (order?: any) => void;
-  onError: (error: Error) => void;
+  onSuccess?: (details: any) => void;
+  onError?: (error: Error) => void;
   onCancel?: () => void;
   onProcessingChange?: (isProcessing: boolean) => void;
+  disabled?: boolean;
+  style?: {
+    layout?: 'vertical' | 'horizontal';
+    color?: 'gold' | 'blue' | 'silver' | 'white' | 'black';
+    shape?: 'pill' | 'rect';
+    label?: 'paypal' | 'checkout' | 'pay' | 'installment' | 'buynow' | 'subscribe' | 'donate';
+    height?: number;
+  };
+  layout?: 'vertical' | 'horizontal';
+  color?: 'gold' | 'blue' | 'silver' | 'white' | 'black';
+  shape?: 'pill' | 'rect';
+  label?: 'paypal' | 'checkout' | 'pay' | 'installment' | 'buynow' | 'subscribe' | 'donate';
+  height?: number;
 }
 
-// Component to handle the PayPal script loading state
-const ButtonWrapper = ({ currency, showSpinner, ...props }: any) => {
-  const [{ isPending, isResolved, isRejected }] = usePayPalScriptReducer();
-  
-  // Memoize the PayPal buttons to prevent unnecessary re-renders
-  const buttons = useMemo(() => {
-    if (isRejected) {
-      return (
-        <div className="text-red-600 text-sm p-4 border border-red-200 bg-red-50 rounded">
-          Failed to load PayPal. Please refresh the page or try again later.
-        </div>
-      );
-    }
-    
-    return (
-      <PayPalButtons 
-        {...props} 
-        style={{ layout: 'vertical' }} 
-        forceReRender={[currency]}
-      />
-    );
-  }, [props, currency, isRejected]);
-
-  return (
-    <div className="paypal-button-container">
-      {showSpinner && isPending && !isResolved && (
-        <div className="flex justify-center my-4">
-          <LoadingSpinner size="md" />
-        </div>
-      )}
-      {buttons}
-    </div>
-  );
-};
-
-const PayPalButton = ({
+const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
   amount,
-  currency,
+  currency = 'USD',
   onSuccess,
   onError,
   onCancel,
   onProcessingChange,
-}: PayPalButtonProps) => {
+  disabled = false,
+  style = { layout: 'vertical' },
+}) => {
+  const { data: session } = useSession();
+  const { items: cartItems } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { cartItems } = useCart();
-  const { data: session } = useSession();
+  const isMounted = useRef(true);
 
-  const createOrder = async (_: CreateOrderData, actions: CreateOrderActions) => {
-    try {
-      if (!session) {
-        throw new Error('You must be logged in to complete this purchase');
-      }
+  // Call onProcessingChange when isProcessing changes
+  useEffect(() => {
+    if (onProcessingChange) {
+      onProcessingChange(isProcessing);
+    }
+  }, [isProcessing, onProcessingChange]);
 
-      setIsProcessing(true);
-      setError(null);
-      onProcessingChange?.(true);
-      
-      // Ensure we have a valid amount
-      const orderAmount = Number(amount);
-      if (isNaN(orderAmount) || orderAmount <= 0) {
-        throw new Error('Invalid order amount');
-      }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
-      // Create a simple order with just the required fields
-      const orderData: { intent: 'CAPTURE' | 'AUTHORIZE', purchase_units: any[] } = {
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: {
-            currency_code: currency,
-            value: orderAmount.toFixed(2)
-          },
-          items: cartItems.map(item => ({
-            name: item.productName?.substring(0, 127) || `Item ${item.productId}`,
-            unit_amount: {
-              currency_code: currency,
-              value: (item.price / Math.max(1, item.quantity)).toFixed(2),
+  const createOrder = useCallback(
+    async (_data: any, actions: any) => {
+      console.log('[PayPal] createOrder called');
+
+      if (!isMounted.current) return;
+
+      try {
+        if (!session?.user?.email) {
+          throw new Error('You must be logged in to complete your purchase');
+        }
+
+        if (amount <= 0) {
+          throw new Error('Invalid order amount');
+        }
+
+        setIsProcessing(true);
+        setError(null);
+
+        const orderValue = amount.toFixed(2);
+        const itemTotal = cartItems
+          .reduce((sum, item) => sum + item.price * item.quantity, 0)
+          .toFixed(2);
+
+        const orderData = {
+          intent: 'CAPTURE',
+          purchase_units: [
+            {
+              amount: {
+                currency_code: currency,
+                value: orderValue,
+                breakdown: {
+                  item_total: { currency_code: currency, value: itemTotal },
+                  shipping: { currency_code: currency, value: '0.00' },
+                  tax_total: { currency_code: currency, value: '0.00' },
+                },
+              },
+              items: cartItems.map((item, index) => ({
+                name: item.productName,
+                unit_amount: { currency_code: currency, value: item.price.toFixed(2) },
+                quantity: item.quantity,
+                description: item.productName?.substring(0, 127) || `Item ${index + 1}`,
+                sku: item.productId.toString().substring(0, 127),
+              })),
+              description: `Order from DishTalgia - ${cartItems.length} items`,
+              custom_id: `ORDER-${Date.now()}`,
+              invoice_id: `INV-${Date.now()}`,
             },
-            quantity: Math.max(1, item.quantity).toString(),
-            sku: item.productId?.toString() || 'SKU-UNKNOWN',
-            category: 'PHYSICAL_GOODS'
-          }))
-        }]
-      };
+          ],
+          application_context: {
+            brand_name: 'DishTalgia',
+            landing_page: 'NO_PREFERENCE',
+            user_action: 'PAY_NOW',
+            shipping_preference: 'NO_SHIPPING',
+            return_url: `${window.location.origin}/checkout/success`,
+            cancel_url: `${window.location.origin}/checkout`,
+            locale: 'en-US',
+          },
+        };
 
-      console.log('Creating PayPal order:', orderData);
-      if (!actions.order) {
-        throw new Error('PayPal order actions not available');
+        console.log('[PayPal] Creating order with data:', JSON.stringify(orderData, null, 2));
+
+        const order = await actions.order.create(orderData);
+        console.log('[PayPal] Order created successfully. Order ID:', order);
+        return order;
+      } catch (err) {
+        console.error('[PayPal] Error creating order:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create order';
+        if (isMounted.current) {
+          setError(errorMessage);
+          toast.error(errorMessage);
+        }
+        throw err;
       }
-      const order = await actions.order.create(orderData);
-      return order;
-    } catch (error: any) {
-      console.error('Error creating PayPal order:', error);
-      const errorMessage = error?.message || 'Failed to create order';
-      setError(errorMessage);
-      onError?.(error);
-      throw new Error(errorMessage);
-    }
-  };
+    },
+    [amount, currency, session, cartItems]
+  );
 
-  const onApprove = async (_: OnApproveData, actions: OnApproveActions) => {
-    try {
-      setIsProcessing(true);
-      setError(null);
-      onProcessingChange?.(true);
-      
-      if (!actions.order) {
-        throw new Error('PayPal order actions not available');
+  const onApprove = useCallback(
+    async (data: any, actions: any) => {
+      console.log('[PayPal] onApprove called with data:', data);
+      try {
+        setIsProcessing(true);
+        const order = await actions.order.capture();
+        console.log('[PayPal] Order captured successfully. Order details:', {
+          orderID: order.id,
+          status: order.status,
+          createTime: order.create_time,
+          payer: order.payer,
+          purchaseUnits: order.purchase_units,
+        });
+
+        if (isMounted.current) {
+          setError(null);
+          if (onSuccess) {
+            console.log('[PayPal] Calling onSuccess callback');
+            onSuccess(order);
+          } else {
+            console.warn('[PayPal] No onSuccess callback provided');
+          }
+        }
+      } catch (err) {
+        console.error('[PayPal] Error capturing order:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+        if (isMounted.current) {
+          setError(errorMessage);
+          toast.error(errorMessage);
+          if (onError) {
+            onError(new Error(errorMessage));
+          }
+        }
+      } finally {
+        if (isMounted.current) {
+          setIsProcessing(false);
+        }
       }
-      
-      const order = await actions.order.capture();
-      onSuccess?.(order);
-      return order;
-    } catch (error: any) {
-      console.error('Error capturing PayPal order:', error);
-      const errorMessage = error?.message || 'Payment processing failed';
-      setError(errorMessage);
-      onError?.(error);
-      throw new Error(errorMessage);
-    } finally {
-      setIsProcessing(false);
-      onProcessingChange?.(false);
-    }
-  };
+    },
+    [onSuccess, onError]
+  );
 
-  // PayPal script options - memoize to prevent unnecessary re-renders
-  const paypalOptions = useMemo(() => ({
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '',
-    currency: currency,
-    intent: 'CAPTURE',
-    components: 'buttons',
-  }), [currency]);
+  const paypalOptions = useMemo(
+    () => ({
+      clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '',
+      currency,
+      intent: 'capture',
+      components: 'buttons',
+      dataNamespace: 'paypal_sdk',
+      dataSdkIntegrationSource: 'integrationbuilder_sc',
+      disableFunding: 'card,venmo,sepa,bancontact,eps,giropay,ideal,mybank,p24',
+      enableFunding: 'paypal',
+      vault: false,
+      debug: process.env.NODE_ENV === 'development',
+      commit: true,
+    }),
+    [currency]
+  );
 
   return (
     <div className="w-full space-y-4">
@@ -157,24 +218,42 @@ const PayPalButton = ({
           {error}
         </div>
       )}
-      
       <PayPalScriptProvider options={paypalOptions}>
-        <ButtonWrapper
-          currency={currency}
-          amount={amount}
-          showSpinner={isProcessing}
+        <PayPalScriptErrorHandler
+          onError={(err) => {
+            console.error('[PayPal] Script Error:', err);
+            if (isMounted.current) {
+              setError('Failed to load PayPal. Please refresh the page and try again.');
+              if (onError) {
+                onError(err);
+              }
+            }
+          }}
+        />
+        <PayPalButtons
+          disabled={disabled || isProcessing}
+          style={style}
           createOrder={createOrder}
           onApprove={onApprove}
-          onCancel={onCancel}
-          onError={(err: any) => {
-            console.error('PayPal Error:', err);
-            setError(err?.message || 'An error occurred with PayPal');
-            onError?.(err);
+          onCancel={() => {
+            console.log('[PayPal] Payment cancelled');
+            if (onCancel) {
+              onCancel();
+            }
           }}
-          style={{ layout: 'vertical' }}
+          onError={(err) => {
+            console.error('[PayPal] Button Error:', err);
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred with PayPal';
+            if (isMounted.current) {
+              setError(errorMessage);
+              toast.error(errorMessage);
+              if (onError) {
+                onError(new Error(errorMessage));
+              }
+            }
+          }}
         />
       </PayPalScriptProvider>
-      
       {isProcessing && (
         <div className="flex items-center justify-center p-4">
           <LoadingSpinner size="md" className="mr-2" />
@@ -185,15 +264,11 @@ const PayPalButton = ({
   );
 };
 
-// Export a dynamic version of PayPalButton that only renders on the client side
-export default dynamic(
-  () => Promise.resolve(PayPalButton),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex justify-center my-4">
-        <LoadingSpinner size="md" />
-      </div>
-    ),
-  }
-);
+export default dynamic(() => Promise.resolve(PayPalButtonContent), {
+  ssr: false,
+  loading: () => (
+    <div className="flex justify-center my-4">
+      <LoadingSpinner size="md" />
+    </div>
+  ),
+});
