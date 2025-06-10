@@ -1,6 +1,6 @@
 'use client';
 
-import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
+import { PayPalButtons } from '@paypal/react-paypal-js';
 import { useCallback, useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useSession } from 'next-auth/react';
