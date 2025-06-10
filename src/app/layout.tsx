@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Open_Sans } from 'next/font/google';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../lib/auth';
 import ClientLayout from './ClientLayout';
 import './globals.css';
 
