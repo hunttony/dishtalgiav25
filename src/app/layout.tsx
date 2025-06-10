@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Open_Sans } from 'next/font/google';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import ClientLayout from './ClientLayout';
 import './globals.css';
 
@@ -21,18 +23,22 @@ const openSans = Open_Sans({
   display: 'swap',
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Get the session on the server side
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en" className={`${playfair.variable} ${openSans.variable}`}>
       <body 
         className="min-h-screen flex flex-col bg-cream-beige text-chocolate-brown"
         suppressHydrationWarning={true}
       >
-        <ClientLayout>{children}</ClientLayout>
+        <ClientLayout session={session}>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

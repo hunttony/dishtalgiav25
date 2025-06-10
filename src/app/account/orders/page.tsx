@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { 
   FiPackage, 
   FiCalendar, 
@@ -93,23 +94,54 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
+  // Fetch orders when the component mounts or when currentPage changes
   useEffect(() => {
-    if (isAuthLoading) return;
-    
-    if (!isAuthenticated) {
-      router.push('/login?callbackUrl=/account/orders');
-      return;
-    }
+    const loadData = async () => {
+      if (isAuthLoading) return;
+      
+      if (!isAuthenticated) {
+        router.push('/login?callbackUrl=/account/orders');
+        return;
+      }
 
-    fetchOrders();
-  }, [isAuthenticated, isAuthLoading, router]);
+      await fetchOrders();
+    };
 
-  const fetchOrders = async () => {
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]); // Only depend on currentPage
+
+  const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/orders?page=${currentPage}&limit=${itemsPerPage}`);
+      // Ensure we're authenticated before making the request
+      if (!isAuthenticated) {
+        console.log('Not authenticated, redirecting to login');
+        router.push('/login?callbackUrl=/account/orders');
+        return;
+      }
+
+      const response = await fetch(`/api/orders?page=${currentPage}&limit=${itemsPerPage}`, {
+        method: 'GET',
+        credentials: 'include', // Include cookies for session
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      });
+      
+      if (response.status === 401) {
+        console.log('Received 401, forcing sign out and redirecting to login');
+        // Force sign out and redirect to login
+        await signIn('credentials', {
+          redirect: true,
+          callbackUrl: '/account/orders',
+        });
+        return;
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -138,7 +170,7 @@ export default function OrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, currentPage, itemsPerPage, router]);
 
   // Handle order status display
   const renderOrderStatus = (status: OrderStatus) => {

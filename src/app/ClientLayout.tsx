@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Session } from 'next-auth';
 import { CartProvider } from '../contexts/CartContext';
 import { PayPalProvider } from '../providers/PayPalProvider';
 import { SessionProvider } from '../providers/SessionProvider';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { BrowserExtensionHandler } from '../components/BrowserExtensionHandler';
+
+interface ClientLayoutProps {
+  children: React.ReactNode;
+  session: Session | null;
+}
 
 function ClientBody({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -30,11 +36,10 @@ function ClientBody({ children }: { children: React.ReactNode }) {
 
 export default function ClientLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  session,
+}: ClientLayoutProps) {
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <CartProvider>
         <PayPalProvider>
           <ClientBody>

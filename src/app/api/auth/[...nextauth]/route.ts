@@ -24,49 +24,71 @@ declare module 'next-auth' {
   }
 }
 
+// Helper to determine if we're in production
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Create auth options
 const authOptions: NextAuthOptions = {
+  // Configure MongoDB adapter
   adapter: MongoDBAdapter(clientPromise, {
     databaseName: process.env.MONGODB_DB,
   }) as Adapter,
+  
+  // Session configuration
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
+  },
+
+  // JWT configuration
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    secret: process.env.NEXTAUTH_SECRET,
+  },
+
+  // Ensure we're using secure cookies in production
+  useSecureCookies: process.env.NODE_ENV === 'production',
 
   // Cookie settings
   cookies: {
     sessionToken: {
-      name: `__Secure-next-auth.session-token`,
+      name: `${isProduction ? '__Secure-' : ''}next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.dishtalgia-v3.vercel.app' : undefined,
+        secure: isProduction,
+        // Let the browser handle the domain in production
       },
     },
     callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.dishtalgia-v3.vercel.app' : undefined,
-      },
-    },
-    csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
+      name: `${isProduction ? '__Secure-' : ''}next-auth.callback-url`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
+      },
+    },
+    csrfToken: {
+      name: `${isProduction ? '__Host-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
       },
     },
   },
+
+  // Authentication providers
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -75,14 +97,16 @@ const authOptions: NextAuthOptions = {
 
         const client = await clientPromise;
         const db = client.db(process.env.MONGODB_DB);
-        const user = await db.collection('users').findOne({ email: credentials.email });
+        const user = await db.collection('users').findOne({ 
+          email: credentials.email.toLowerCase()
+        });
 
         if (!user) {
           throw new Error('No user found with this email');
         }
 
-        const isValid = await compare(credentials.password, user.password);
 
+        const isValid = await compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error('Invalid password');
         }
@@ -90,64 +114,74 @@ const authOptions: NextAuthOptions = {
         return { 
           id: user._id.toString(), 
           email: user.email, 
-          name: user.name 
-        } as const;
+          name: user.name,
+          role: user.role || 'user'
+        };
       }
     })
   ],
-  // Session configuration
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
-  },
-  // JWT configuration
-  jwt: {
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-  },
+
+  // Callbacks
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Initial sign in
-      if (account && user) {
+    async jwt({ token, user }) {
+      // Add user ID and role to the token
+      if (user) {
         token.id = user.id;
-        token.role = user.role || 'user';
+        token.role = (user as any).role || 'user';
       }
       return token;
     },
     async session({ session, token }) {
+      // Add user ID and role to the session
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string; // Add role to the session
+        (session.user as any).id = token.id as string;
+        (session.user as any).role = token.role as string;
       }
       return session;
     },
   },
+
+  // Custom pages
   pages: {
     signIn: '/login',
     error: '/login',
   },
+
+  // Secret key for signing tokens
   secret: process.env.NEXTAUTH_SECRET,
-  useSecureCookies: process.env.NODE_ENV === 'production',
-  debug: process.env.NODE_ENV === 'development',
-  // Ensure we're using the correct URL in production
-  // baseUrl is not a valid option in this version, using NEXTAUTH_URL environment variable instead
-  // Custom logger
+  
+  // Debug mode in development
+  debug: !isProduction,
+  
+  // Security settings are now at the top level
+  // Ensure cookies are properly cleared on sign out
+  events: {
+    async signOut({ token }) {
+      if (token?.sessionToken) {
+        // NextAuth will handle clearing the session cookie
+        // We'll rely on the built-in cookie clearing mechanism
+        // by letting NextAuth handle the session invalidation
+      }
+    },
+  },
+
+  // Logger configuration
   logger: {
     error(code, metadata) {
-      console.error(code, metadata);
+      console.error('Auth error:', code, metadata);
     },
     warn(code) {
-      console.warn(code);
+      console.warn('Auth warning:', code);
     },
     debug(code, metadata) {
       if (process.env.NODE_ENV === 'development') {
-        console.debug(code, metadata);
+        console.debug('Auth debug:', code, metadata);
       }
     },
   },
 };
 
-// Export the handler for NextAuth
+// Create and export the auth handler
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST, authOptions };
