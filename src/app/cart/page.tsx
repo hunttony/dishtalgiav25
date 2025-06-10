@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiPlus, FiMinus, FiX, FiArrowRight } from 'react-icons/fi';
+import { FiPlus, FiMinus, FiX } from 'react-icons/fi';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 const paypalOptions = {
@@ -45,11 +45,50 @@ export default function CartPage() {
   const onApprove = async (_data: unknown, actions: any) => {
     setIsProcessing(true);
     try {
-      await actions.order.capture();
+      const order = await actions.order.capture();
+      // Extract the order ID from the PayPal response
+      const orderId = order.purchase_units?.[0]?.payments?.captures?.[0]?.id || 
+                    order.purchase_units?.[0]?.payments?.authorizations?.[0]?.id ||
+                    Date.now().toString();
+      
+      // Save order to database
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderNumber: orderId,
+          items: items.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            sizeId: item.sizeId,
+            sizeName: item.sizeName,
+            quantity: item.quantity,
+            price: item.price,
+            image: item.image
+          })),
+          subtotal: cartTotal,
+          tax: cartTotal * 0.08, // 8% tax rate
+          total: cartTotal * 1.08,
+          status: 'completed',
+          paymentMethod: 'paypal',
+          paymentStatus: 'paid',
+          paymentId: order.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      // Clear cart and redirect to success page with order number
       clearCart();
-      window.location.href = '/checkout/success';
+      window.location.href = `/checkout/success?order=${orderId}`;
     } catch (error) {
       console.error('Payment failed:', error);
+      alert('Payment was successful but there was an error saving your order. Please contact support with your PayPal transaction ID.');
+      window.location.href = '/checkout/success';
     } finally {
       setIsProcessing(false);
     }
@@ -200,20 +239,12 @@ export default function CartPage() {
                 </div>
                 
                 <div className="space-y-3 pt-4">
-                  <Link
-                    href="/checkout"
-                    className="flex items-center justify-center w-full bg-soft-red text-white text-center py-3 rounded-md hover:bg-chocolate-brown transition-colors"
-                  >
-                    Proceed to Checkout
-                    <FiArrowRight className="ml-2" />
-                  </Link>
-                  
                   <div className="relative py-2">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-300"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">Or pay with</span>
+                      <span className="px-2 bg-white text-gray-500">Pay with PayPal</span>
                     </div>
                   </div>
                   

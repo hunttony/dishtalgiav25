@@ -144,25 +144,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <p>${cartTotal.toFixed(2)}</p>
                         </div>
                         <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
-                        <div className="mt-6">
-                          <a
-                            href="/checkout"
-                            className="flex items-center justify-center rounded-md border border-transparent bg-soft-red px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-golden-yellow"
+                        <div className="mt-6 flex justify-center">
+                          <button
+                            type="button"
+                            className="font-medium text-soft-red hover:text-golden-yellow"
+                            onClick={onClose}
                           >
-                            Checkout
-                          </a>
-                        </div>
-                        <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-                          <p>
-                            or{' '}
-                            <button
-                              type="button"
-                              className="font-medium text-soft-red hover:text-golden-yellow"
-                              onClick={onClose}
-                            >
-                              Continue Shopping<span aria-hidden="true"> &rarr;</span>
-                            </button>
-                          </p>
+                            Continue Shopping<span aria-hidden="true"> &rarr;</span>
+                          </button>
                         </div>
                       </div>
                     )}
