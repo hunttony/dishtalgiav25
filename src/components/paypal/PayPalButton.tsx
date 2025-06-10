@@ -2,10 +2,10 @@
 
 import { PayPalButtons, usePayPalScriptReducer, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useCart } from '@/contexts/CartContext';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import dynamic from 'next/dynamic';
 
 // Placeholder for LoadingSpinner (replace with actual implementation)
 const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: string }> = ({ size, className }) => (
@@ -75,6 +75,40 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
     };
   }, []);
 
+  const createOrderInDatabase = useCallback(async (_orderDetails: any, paypalOrderId: string) => {
+    try {
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: cartItems.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            sizeId: item.sizeId,
+            sizeName: item.sizeName,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+          })),
+          paymentId: paypalOrderId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create order');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  }, [cartItems]);
+
   const createOrder = useCallback(
     async (_data: any, actions: any) => {
       console.log('[PayPal] createOrder called');
@@ -93,10 +127,16 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
         setIsProcessing(true);
         setError(null);
 
-        const orderValue = amount.toFixed(2);
-        const itemTotal = cartItems
-          .reduce((sum, item) => sum + item.price * item.quantity, 0)
-          .toFixed(2);
+        // Calculate the item total from cart items
+        const itemTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const taxRate = 0.08; // 8% tax rate
+        const tax = itemTotal * taxRate;
+        const calculatedTotal = itemTotal + tax;
+        
+        // Ensure the calculated total matches the amount passed to the component
+        if (Math.abs(calculatedTotal - amount) > 0.01) {
+          console.warn(`Cart total ($${calculatedTotal.toFixed(2)}) does not match expected amount ($${amount.toFixed(2)})`);
+        }
 
         const orderData = {
           intent: 'CAPTURE',
@@ -104,23 +144,36 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
             {
               amount: {
                 currency_code: currency,
-                value: orderValue,
+                value: calculatedTotal.toFixed(2),
                 breakdown: {
-                  item_total: { currency_code: currency, value: itemTotal },
-                  shipping: { currency_code: currency, value: '0.00' },
-                  tax_total: { currency_code: currency, value: '0.00' },
+                  item_total: { 
+                    currency_code: currency, 
+                    value: itemTotal.toFixed(2) 
+                  },
+                  shipping: { 
+                    currency_code: currency, 
+                    value: '0.00' 
+                  },
+                  tax_total: { 
+                    currency_code: currency, 
+                    value: tax.toFixed(2) 
+                  },
                 },
               },
               items: cartItems.map((item, index) => ({
                 name: item.productName,
-                unit_amount: { currency_code: currency, value: item.price.toFixed(2) },
-                quantity: item.quantity,
-                description: item.productName?.substring(0, 127) || `Item ${index + 1}`,
-                sku: item.productId.toString().substring(0, 127),
+                unit_amount: { 
+                  currency_code: currency, 
+                  value: item.price.toFixed(2) 
+                },
+                quantity: item.quantity.toString(),
+                description: item.sizeName ? `${item.productName} (${item.sizeName})`.substring(0, 127) : item.productName?.substring(0, 127) || `Item ${index + 1}`,
+                sku: `${item.productId}-${item.sizeId}`.substring(0, 127),
+                category: 'PHYSICAL_GOODS'
               })),
-              description: `Order from DishTalgia - ${cartItems.length} items`,
+              description: `Order from DishTalgia - ${cartItems.length} ${cartItems.length === 1 ? 'item' : 'items'}`,
               custom_id: `ORDER-${Date.now()}`,
-              invoice_id: `INV-${Date.now()}`,
+              invoice_id: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
             },
           ],
           application_context: {
@@ -154,36 +207,39 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
 
   const onApprove = useCallback(
     async (data: any, actions: any) => {
-      console.log('[PayPal] onApprove called with data:', data);
+      console.log('[PayPal] Payment approved. Order ID:', data.orderID);
+
+      if (!isMounted.current) return;
+
       try {
         setIsProcessing(true);
-        const order = await actions.order.capture();
-        console.log('[PayPal] Order captured successfully. Order details:', {
-          orderID: order.id,
-          status: order.status,
-          createTime: order.create_time,
-          payer: order.payer,
-          purchaseUnits: order.purchase_units,
-        });
+        setError(null);
 
-        if (isMounted.current) {
-          setError(null);
-          if (onSuccess) {
-            console.log('[PayPal] Calling onSuccess callback');
-            onSuccess(order);
-          } else {
-            console.warn('[PayPal] No onSuccess callback provided');
-          }
+        // Capture the payment
+        const details = await actions.order.capture();
+        console.log('[PayPal] Payment captured:', details);
+
+        // Create order in database
+        const order = await createOrderInDatabase(details, data.orderID);
+        console.log('[Order] Created in database:', order);
+
+        if (onSuccess) {
+          onSuccess({
+            ...details,
+            orderId: order.orderId,
+            orderNumber: order.orderNumber
+          });
         }
+
+        // Redirect to success page
+        window.location.href = `/checkout/success?orderId=${order.orderNumber}`;
       } catch (err) {
-        console.error('[PayPal] Error capturing order:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
-        if (isMounted.current) {
-          setError(errorMessage);
-          toast.error(errorMessage);
-          if (onError) {
-            onError(new Error(errorMessage));
-          }
+        console.error('[PayPal] Error processing order:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to process order';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        if (onError) {
+          onError(err instanceof Error ? err : new Error(errorMessage));
         }
       } finally {
         if (isMounted.current) {
@@ -191,7 +247,7 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
         }
       }
     },
-    [onSuccess, onError]
+    [onSuccess, onError, createOrderInDatabase]
   );
 
   const paypalOptions = useMemo(
@@ -210,6 +266,21 @@ const PayPalButtonContent: React.FC<PayPalButtonProps> = ({
     }),
     [currency]
   );
+
+  // Check if we're on the client side
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="w-full flex justify-center p-8">
+        <LoadingSpinner size="md" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-4">
