@@ -14,7 +14,7 @@ const featuredProducts = [
     description: "Classic Southern comfort with creamy vanilla pudding, ripe bananas, and crunchy Nilla wafers.",
     price: 8.00,
     slug: "original",
-    image: "/images/dishtalgiaoriginal.png"
+    image: "/images/pudding-original.png"
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const featuredProducts = [
     description: "A decadent twist with caramelized bananas, rum-infused sauce, and a graham cracker crust.",
     price: 10.00,
     slug: "bananas-foster",
-    image: "/images/dishtalgia-2.webp"
+    image: "/images/pudding-foster.png"
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ const featuredProducts = [
     description: "Rich chocolate pudding layered with cookie crumbles and whipped cream.",
     price: 10.00,
     slug: "mississippi-mud",
-    image: "/images/mississippi-mud.png"
+    image: "/images/pudding-mud.png"
   }
 ];
 
@@ -63,31 +63,27 @@ export default function Home() {
       <section className="relative bg-cream-beige py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-playfair font-bold text-chocolate-brown mb-6">
+            {/* <h1 className="text-4xl md:text-6xl font-playfair font-bold text-chocolate-brown mb-6">
               Our Signature Puddings
-            </h1>
-            <p className="text-xl text-chocolate-brown/80 max-w-2xl mx-auto">
+            </h1> */}
+            {/* <p className="text-xl text-chocolate-brown/80 max-w-2xl mx-auto">
               Handcrafted with love, served with nostalgia
-            </p>
+            </p> */}
           </div>
           
           <div className="relative">
             <PuddingCarousel 
-              images={[
-                '/images/pudding-original.png',
-                '/images/pudding-foster.png',
-                '/images/pudding-mud.png'
-              ]} 
+              images={featuredProducts.map(product => product.image)} 
             />
           </div>
         </div>
         <div className="absolute inset-0 bg-chocolate-brown/60 flex items-center justify-center">
           <div className="text-center text-warm-white px-4 max-w-4xl">
             <h1 className="text-4xl md:text-6xl font-playfair font-bold mb-6">
-              Indulge in Nostalgia
+              Indulge in Dishstalgia
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
-              Handcrafted banana puddings that bring the taste of Southern comfort to your table.
+              Handcrafted with love, we make puddings that bring the taste of Southern comfort to your table.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
