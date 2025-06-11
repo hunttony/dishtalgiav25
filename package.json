@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install typescript --no-save && npm run check-types && next build",
-    "check-types": "tsc --noEmit",
+    "build": "npm install typescript && npm run check-types && next build",
+    "check-types": "npx tsc --noEmit",
     "postinstall": "echo 'Skipping postinstall TypeScript installation'",
     "start": "next start",
     "lint": "next lint"
