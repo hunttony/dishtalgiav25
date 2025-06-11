@@ -62,14 +62,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-cream-beige py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            {/* <h1 className="text-4xl md:text-6xl font-playfair font-bold text-chocolate-brown mb-6">
-              Our Signature Puddings
-            </h1> */}
-            {/* <p className="text-xl text-chocolate-brown/80 max-w-2xl mx-auto">
-              Handcrafted with love, served with nostalgia
-            </p> */}
-          </div>
+          
           
           <div className="relative">
             <PuddingCarousel 
@@ -121,7 +114,9 @@ export default function Home() {
                     src={product.image}
                     alt={product.name}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
+                    priority={product.slug === 'pudding-mud'} // Add priority to LCP image
                   />
                 </div>
                 <div className="p-6">

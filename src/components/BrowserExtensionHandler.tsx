@@ -22,8 +22,16 @@ export function BrowserExtensionHandler() {
   const observerRef = useRef<MutationObserver | null>(null);
 
   useEffect(() => {
-    // Only run on client side
-    if (typeof document === 'undefined') return;
+    // Only run on client side and after the page is fully loaded
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+    // Skip if this is a MetaMask page or if ethereum is not available
+    if (window.ethereum) {
+      // If ethereum is defined but not MetaMask, continue
+      if (window.ethereum.isMetaMask === false) {
+        return;
+      }
+    }
 
     const cleanupExtensions = () => {
       const body = document.body;
@@ -45,9 +53,6 @@ export function BrowserExtensionHandler() {
 
       // Add a class to indicate extensions are being handled
       body.classList.add('extensions-handled');
-      
-      // Force a reflow to ensure React's hydration completes
-      void body.offsetHeight;
     };
 
     // Initial cleanup

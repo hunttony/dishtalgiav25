@@ -1,6 +1,6 @@
-import NextAuth, { type NextAuthOptions } from 'next-auth';
+import NextAuth, { type NextAuthOptions, type User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { MongoDBAdapter } from "@auth/mongodb-adapter"
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { clientPromise } from '@/lib/mongodb';
 import { compare } from 'bcryptjs';
 import type { Adapter } from 'next-auth/adapters';
@@ -37,19 +37,19 @@ const authOptions: NextAuthOptions = {
   // Session configuration
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
+    maxAge: 12 * 60 * 60, // 12 hours
+    updateAge: 60 * 60, // 1 hour
   },
 
   // JWT configuration
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
     secret: process.env.NEXTAUTH_SECRET,
+    maxAge: 12 * 60 * 60, // 12 hours
   },
-
-  // Ensure we're using secure cookies in production
-  useSecureCookies: process.env.NODE_ENV === 'production',
-
+  
+  // Use secure cookies in production
+  useSecureCookies: isProduction,
+  
   // Cookie settings
   cookies: {
     sessionToken: {
@@ -59,7 +59,7 @@ const authOptions: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: isProduction,
-        // Let the browser handle the domain in production
+        maxAge: 12 * 60 * 60, // 12 hours
       },
     },
     callbackUrl: {
@@ -154,26 +154,82 @@ const authOptions: NextAuthOptions = {
   debug: !isProduction,
   
   // Security settings are now at the top level
-  // Ensure cookies are properly cleared on sign out
+  // Handle sign out and sign in events
   events: {
     async signOut({ token }) {
-      if (token?.sessionToken) {
-        // NextAuth will handle clearing the session cookie
-        // We'll rely on the built-in cookie clearing mechanism
-        // by letting NextAuth handle the session invalidation
+      try {
+        // Clear all auth-related cookies using document.cookie
+        if (typeof document !== 'undefined') {
+          // Clear all possible auth cookies
+          const cookieNames = [
+            // Session tokens
+            '__Secure-next-auth.session-token',
+            'next-auth.session-token',
+            // Callback URLs
+            '__Secure-next-auth.callback-url',
+            'next-auth.callback-url',
+            // CSRF tokens
+            '__Secure-next-auth.csrf-token',
+            'next-auth.csrf-token',
+            // State parameters
+            '__Secure-next-auth.state',
+            'next-auth.state',
+            // PKCE code verifier
+            '__Secure-next-auth.pkce.code_verifier',
+            'next-auth.pkce.code_verifier'
+          ];
+          
+          // Delete each cookie
+          cookieNames.forEach(cookieName => {
+            document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'Secure; ' : ''}SameSite=Lax`;
+          });
+        }
+        
+        // Clear any stored tokens in the database
+        if (token?.sessionToken) {
+          try {
+            const client = await clientPromise;
+            const db = client.db(process.env.MONGODB_DB);
+            await db.collection('sessions').deleteMany({ sessionToken: token.sessionToken });
+          } catch (dbError) {
+            console.error('Error cleaning up database session:', dbError);
+          }
+        }
+      } catch (error) {
+        console.error('Error during sign out:', error);
+      }
+    },
+    async signIn() {
+      try {
+        // Clear any stale sessions on new sign in
+        if (typeof document !== 'undefined') {
+          // Clear session tokens
+          document.cookie = `__Secure-next-auth.session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'Secure; ' : ''}SameSite=Lax`;
+          document.cookie = `next-auth.session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${isProduction ? 'Secure; ' : ''}SameSite=Lax`;
+          
+          // Clear any stored state
+          try {
+            localStorage.removeItem('nextauth.message');
+            sessionStorage.clear();
+          } catch (storageError) {
+            console.error('Error clearing storage:', storageError);
+          }
+        }
+      } catch (error) {
+        console.error('Error during sign in cleanup:', error);
       }
     },
   },
 
   // Logger configuration
   logger: {
-    error(code, metadata) {
+    error: (code: string, metadata: unknown) => {
       console.error('Auth error:', code, metadata);
     },
-    warn(code) {
+    warn: (code: string) => {
       console.warn('Auth warning:', code);
     },
-    debug(code, metadata) {
+    debug: (code: string, metadata: unknown) => {
       if (process.env.NODE_ENV === 'development') {
         console.debug('Auth debug:', code, metadata);
       }
