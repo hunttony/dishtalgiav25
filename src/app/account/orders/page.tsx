@@ -15,8 +15,8 @@ import {
   FiLoader
 } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/useAuth';
-import { formatPrice } from '@/lib/utils';
+import { useAuth } from '../../../../hooks/useAuth';
+import { formatPrice } from '../../../../lib/utils';
 
 // Define types for order items
 interface OrderItem {

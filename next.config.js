@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const path = require('path');
+
+module.exports = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -19,6 +21,17 @@ const nextConfig = {
     // your project has type errors.
     // !! WARN !!
     ignoreBuildErrors: false,
+  },
+  webpack: (config) => {
+    // Add path aliases
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+      '@/components': path.resolve(__dirname, 'src/components'),
+      '@/lib': path.resolve(__dirname, 'src/lib'),
+      '@/hooks': path.resolve(__dirname, 'src/hooks'),
+    };
+    return config;
   },
   eslint: {
     // Temporarily ignore ESLint during builds to resolve build failures

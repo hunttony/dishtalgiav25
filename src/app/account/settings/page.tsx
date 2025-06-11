@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiLogOut, FiLock, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import ProtectedRoute from '../../../../components/ProtectedRoute';
 
 interface Address {
   street: string;
