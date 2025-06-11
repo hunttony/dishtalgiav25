@@ -11,7 +11,7 @@ const featuredProducts = [
     description: "Classic Southern comfort with creamy vanilla pudding, ripe bananas, and crunchy Nilla wafers.",
     price: 8.00,
     slug: "original",
-    image: "/images/original-pudding.jpg"
+    image: "/images/dishtalgiaoriginal.png"
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const featuredProducts = [
     description: "Rich chocolate pudding layered with cookie crumbles and whipped cream.",
     price: 10.00,
     slug: "mississippi-mud",
-    image: "/images/mississippi-mud.jpg"
+    image: "/images/mississippi-mud.png"
   }
 ];
 

@@ -18,10 +18,10 @@ const products: Product[] = [
       "Pure vanilla extract"
     ],
     nutritionInfo: "Serving size: 1 cup (200g) - Calories: 320, Total Fat: 12g, Cholesterol: 45mg, Sodium: 150mg, Total Carbohydrates: 48g, Protein: 4g",
-    image: "/images/IMG_2016-removebg-preview (2).png",
+    image: "/images/dishtalgiaoriginal.png",
     sizes: [
-      { id: 'regular', name: 'Regular', price: 8.00, description: 'Serves 2-3' },
-      { id: 'family', name: 'Family', price: 25.00, description: 'Serves 6-8' },
+      { id: 'regular', name: 'Regular', price: 8.00, description: 'Serves 1-2' },
+      { id: 'family', name: 'Family', price: 28.00, description: 'Serves 6-8' },
       { id: 'party', name: 'Party', price: 80.00, description: 'Serves 12-15' }
     ],
     category: "Classic",
@@ -45,8 +45,8 @@ const products: Product[] = [
     nutritionInfo: "Serving size: 1 cup (220g) - Calories: 380, Total Fat: 15g, Cholesterol: 50mg, Sodium: 180mg, Total Carbohydrates: 55g, Protein: 4g",
     image: "/images/dishtalgia-2.webp",
     sizes: [
-      { id: 'regular', name: 'Regular', price: 10.00, description: 'Serves 2-3' },
-      { id: 'family', name: 'Family', price: 28.00, description: 'Serves 6-8' },
+      { id: 'regular', name: 'Regular', price: 10.00, description: 'Serves 1-2' },
+      { id: 'family', name: 'Family', price: 32.00, description: 'Serves 6-8' },
       { id: 'party', name: 'Party', price: 100.00, description: 'Serves 12-15' }
     ],
     category: "Specialty",
@@ -69,7 +69,7 @@ const products: Product[] = [
     nutritionInfo: "Serving size: 1 cup (210g) - Calories: 400, Total Fat: 18g, Cholesterol: 55mg, Sodium: 220mg, Total Carbohydrates: 58g, Protein: 5g",
     image: "/images/mississippi-mud.png",
     sizes: [
-      { id: 'regular', name: 'Regular', price: 10.00, description: 'Serves 2-3' },
+      { id: 'regular', name: 'Regular', price: 10.00, description: 'Serves 1-2' },
       { id: 'family', name: 'Family', price: 28.00, description: 'Serves 6-8' },
       { id: 'party', name: 'Party', price: 100.00, description: 'Serves 12-15' }
     ],

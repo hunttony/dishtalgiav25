@@ -33,11 +33,11 @@ const products: Product[] = [
     slug: "original",
     description: "Classic Southern comfort with creamy vanilla pudding, ripe bananas, and crunchy Nilla wafers.",
     price: 8.00,
-    image: "/images/IMG_2016-removebg-preview (2).png",
+    image: "/images/dishtalgiaoriginal.png",
     sizes: [
-      { id: 'small', name: 'Small (8oz)', price: 6.00, description: 'Small size', stock: 10 },
-      { id: 'regular', name: 'Regular (16oz)', price: 8.00, description: 'Regular size', stock: 10 },
-      { id: 'large', name: 'Large (32oz)', price: 14.00, description: 'Large size', stock: 5 }
+      { id: 'regular', name: 'Regular (8oz)', price: 8.00, description: 'Regular size', stock: 10 },
+      { id: 'family', name: 'Family (16oz)', price: 28.00, description: 'Family size', stock: 10 },
+      { id: 'party', name: 'Party (32oz)', price: 80.00, description: 'Party size', stock: 5 }
     ]
   },
   {
@@ -48,9 +48,9 @@ const products: Product[] = [
     price: 10.00,
     image: "/images/dishtalgia-2.webp",
     sizes: [
-      { id: 'small', name: 'Small (8oz)', price: 8.00, description: 'Small size', stock: 10 },
-      { id: 'regular', name: 'Regular (16oz)', price: 10.00, description: 'Regular size', stock: 10 },
-      { id: 'large', name: 'Large (32oz)', price: 18.00, description: 'Large size', stock: 5 }
+      { id: 'regular', name: 'Regular (8oz)', price: 10.00, description: 'Regular size', stock: 10 },
+      { id: 'family', name: 'Family (32oz)', price: 32.00, description: 'Family size', stock: 10 },
+      { id: 'party', name: 'Party (96oz)', price: 100.00, description: 'Party size', stock: 5 }
     ]
   },
   {
@@ -61,9 +61,9 @@ const products: Product[] = [
     price: 10.00,
     image: "/images/mississippi-mud.png",
     sizes: [
-      { id: 'small', name: 'Small (8oz)', price: 8.00, description: 'Small size', stock: 10 },
-      { id: 'regular', name: 'Regular (16oz)', price: 10.00, description: 'Regular size', stock: 10 },
-      { id: 'large', name: 'Large (32oz)', price: 18.00, description: 'Large size', stock: 5 }
+      { id: 'regular', name: 'Regular (8oz)', price: 10.00, description: 'Regular size', stock: 10 },
+      { id: 'family', name: 'Family (16oz)', price: 32.00, description: 'Family size', stock: 10 },
+      { id: 'party', name: 'Party (96oz)', price: 100.00, description: 'Party size', stock: 5 }
     ]
   }
 ];
