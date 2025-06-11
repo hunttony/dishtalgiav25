@@ -14,12 +14,32 @@ declare module 'next-auth' {
       image?: string | null;
       role?: string;
     };
+    accessToken?: string;
+    provider?: string;
   }
+  
   interface User {
     id: string;
     name?: string | null;
     email?: string | null;
     role?: string;
+    image?: string | null;
+  }
+  
+  interface JWT {
+    sub: string;
+    role?: string;
+    provider?: string;
+    accessToken?: string;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    sub: string;
+    role?: string;
+    provider?: string;
+    accessToken?: string;
   }
 }
 
@@ -120,33 +140,6 @@ export const authOptions: NextAuthOptions = {
     }
   ],
   
-  // Callbacks
-  callbacks: {
-    async jwt({ token, user }) {
-      // Add user ID and role to the token
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role || 'user';
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      // Add user ID and role to the session
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as string;
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
-  },
-
   // Custom pages
   pages: {
     signIn: '/login',
@@ -176,22 +169,107 @@ export const authOptions: NextAuthOptions = {
   // Debug mode in development
   debug: process.env.NODE_ENV === 'development',
   
+  // Callbacks - Handle JWT and session management
+  callbacks: {
+    /**
+     * JWT Callback - Called whenever a JSON Web Token is created or updated
+     */
+    async jwt({ token, user, account }) {
+      // Initial sign in - add user info to the token
+      if (user) {
+        token.sub = user.id;
+        token.role = user.role || 'user';
+        
+        // Add OAuth provider data if available
+        if (account) {
+          token.provider = account.provider;
+          
+          // Store OAuth access token if available
+          if (account.access_token) {
+            token.accessToken = account.access_token;
+          }
+        }
+      }
+      
+      // Return previous token if the callback was not triggered by a sign in
+      return token;
+    },
+    
+    /**
+     * Session Callback - Controls what gets returned when using getSession() or useSession()
+     */
+    async session({ session, token }) {
+      // Add user ID and role to the session
+      if (session.user) {
+        session.user.id = token.sub || '';
+        session.user.role = (token.role as string) || 'user';
+        
+        // Add any additional token data to the session if needed
+        if (token.accessToken) {
+          (session as any).accessToken = token.accessToken;
+        }
+        
+        if (token.provider) {
+          (session as any).provider = token.provider;
+        }
+      }
+      
+      return session;
+    },
+    
+    /**
+     * Sign In Callback - Called when a user signs in
+     */
+    async signIn() {
+      // You can add custom validation here
+      const isAllowedToSignIn = true; // Add your custom logic here
+      
+      if (isAllowedToSignIn) {
+        return true;
+      } else {
+        // Return false to display a default error message
+        return false;
+        // Or you can return a URL to redirect to:
+        // return '/unauthorized';
+      }
+    },
+    
+    /**
+     * Redirect Callback - Controls the redirect after sign in/sign out
+     */
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
+  },
+  
   // Event handlers
   events: {
     async signOut({ token }) {
       try {
-        // Clear any stored tokens in the database
-        if (token?.sessionToken) {
-          try {
-            const client = await clientPromise;
-            const db = client.db(process.env.MONGODB_DB);
-            await db.collection('sessions').deleteMany({ sessionToken: token.sessionToken });
-          } catch (dbError) {
-            console.error('Error cleaning up database session:', dbError);
-          }
+        const client = await clientPromise;
+        const db = client.db(process.env.MONGODB_DB);
+        
+        // Delete all sessions for this user
+        if (token?.sub) {
+          await db.collection('sessions').deleteMany({ userId: token.sub });
         }
+        
+        // Also try to delete by session token if available
+        if (token?.sessionToken) {
+          await db.collection('sessions').deleteMany({ sessionToken: token.sessionToken });
+        }
+        
+        // Clear any other related data if needed
+        await db.collection('accounts').deleteMany({ userId: token?.sub });
+        
+        console.log('Successfully cleaned up user session data');
       } catch (error) {
-        console.error('Error during sign out:', error);
+        console.error('Error during sign out cleanup:', error);
+        // Don't rethrow to prevent signout from failing
       }
     },
   },
