@@ -28,3 +28,49 @@
     @apply transition-all duration-200 hover:opacity-90 active:scale-95;
   }
 }
+
+/* Carousel Styles */
+.slick-slide > div {
+  outline: none !important;
+}
+
+.slick-slide:not(.slick-center) .relative {
+  transform: scale(0.9);
+  opacity: 0.8;
+  filter: blur(1px);
+  transition: all 0.3s ease;
+}
+
+.slick-center .relative {
+  transform: scale(1.5);
+  opacity: 2;
+  filter: none;
+  transition: all 0.3s ease;
+}
+
+/* Dots customization */
+.slick-dots li button:before {
+  color: #D4A76A;
+  opacity: 0.8;
+  font-size: 10px;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #8B5A2B;
+  opacity: 1;
+}
+
+/* Custom arrow buttons */
+.slick-arrow {
+  width: 40px;
+  height: 40px;
+  z-index: 10;
+}
+
+.slick-prev {
+  left: 20px;
+}
+
+.slick-next {
+  right: 20px;
+}

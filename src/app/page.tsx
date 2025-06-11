@@ -2,6 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const PuddingCarousel = dynamic(() => import('@/components/PuddingCarousel'), { ssr: false });
 
 // Sample product data - in a real app, this would come from an API or CMS
 const featuredProducts = [
@@ -57,8 +60,27 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center bg-cover bg-center" 
-               style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}>
+      <section className="relative bg-cream-beige py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-playfair font-bold text-chocolate-brown mb-6">
+              Our Signature Puddings
+            </h1>
+            <p className="text-xl text-chocolate-brown/80 max-w-2xl mx-auto">
+              Handcrafted with love, served with nostalgia
+            </p>
+          </div>
+          
+          <div className="relative">
+            <PuddingCarousel 
+              images={[
+                '/images/pudding-original.png',
+                '/images/pudding-foster.png',
+                '/images/pudding-mud.png'
+              ]} 
+            />
+          </div>
+        </div>
         <div className="absolute inset-0 bg-chocolate-brown/60 flex items-center justify-center">
           <div className="text-center text-warm-white px-4 max-w-4xl">
             <h1 className="text-4xl md:text-6xl font-playfair font-bold mb-6">
