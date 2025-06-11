@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
-module.exports = {
+const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -31,6 +31,13 @@ module.exports = {
       '@/lib': path.resolve(__dirname, 'src/lib'),
       '@/hooks': path.resolve(__dirname, 'src/hooks'),
     };
+
+    // Add SVGR Loader for SVG files
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
     return config;
   },
   eslint: {
@@ -53,15 +60,6 @@ module.exports = {
         ],
       },
     ];
-  },
-  webpack: (config) => {
-    // Add SVGR Loader for SVG files
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    });
-
-    return config;
   },
 };
 
