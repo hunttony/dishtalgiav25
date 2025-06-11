@@ -7,9 +7,9 @@ import { FiMail, FiLock, FiUser } from 'react-icons/fi';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '../../../../components/ui/Button';
-import { Input } from '../../../../components/ui/Input';
-import LoadingSpinner from '../../../../components/ui/LoadingSpinner';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
