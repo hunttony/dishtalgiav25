@@ -37,45 +37,55 @@ export async function connectToDatabase(): Promise<CachedConnection> {
 
   if (!cached.promise) {
     const opts: MongoClientOptions = {
-      // TLS/SSL Configuration
-      tls: true,
+      // TLS/SSL Configuration - only enable if your MongoDB URI uses 'mongodb+srv://'
+      tls: MONGODB_URI.startsWith('mongodb+srv://'),
       tlsAllowInvalidCertificates: false,
       tlsAllowInvalidHostnames: false,
       
-      // Connection Timeouts
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 30000,
-      serverSelectionTimeoutMS: 30000,
+      // Connection Timeouts - increased for better reliability
+      connectTimeoutMS: 30000, // 30 seconds
+      socketTimeoutMS: 45000,  // 45 seconds
+      serverSelectionTimeoutMS: 30000, // 30 seconds
+      heartbeatFrequencyMS: 10000,
       
       // Authentication
       authMechanism: 'DEFAULT',
       authSource: 'admin',
       
-      // Connection Pooling
-      maxPoolSize: 10,
+      // Connection Pooling - optimized for serverless environments
+      maxPoolSize: 15,
       minPoolSize: 1,
-      maxIdleTimeMS: 60000,
+      maxIdleTimeMS: 10000,
+      waitQueueTimeoutMS: 10000,
       
-      // Retry Logic
+      // Retry Logic - more aggressive retry settings
       retryWrites: true,
       retryReads: true,
       
       // Read/Write Concerns
       w: 'majority',
-      wtimeoutMS: 5000,
-      readPreference: 'primary',
+      wtimeoutMS: 10000,
+      readPreference: 'primaryPreferred',
       
-      // Compression
+      // Compression - disable if not needed
       compressors: ['zlib'],
-      zlibCompressionLevel: 7
+      zlibCompressionLevel: 3 // Lower compression for better performance
     };
 
-    cached.promise = MongoClient.connect(MONGODB_URI, opts).then((client) => {
-      return {
-        client,
-        db: client.db(MONGODB_DB),
-      };
-    });
+    console.log('Attempting to connect to MongoDB...');
+    
+    cached.promise = MongoClient.connect(MONGODB_URI, opts)
+      .then((client) => {
+        console.log('Successfully connected to MongoDB');
+        return {
+          client,
+          db: client.db(MONGODB_DB),
+        };
+      })
+      .catch((error) => {
+        console.error('MongoDB connection error:', error);
+        throw new Error(`Failed to connect to MongoDB: ${error.message}`);
+      });
   }
 
   try {
