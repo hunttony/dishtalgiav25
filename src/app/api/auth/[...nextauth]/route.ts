@@ -1,4 +1,4 @@
-import NextAuth, { type NextAuthOptions, type User } from 'next-auth';
+import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { clientPromise } from '@/lib/mongodb';

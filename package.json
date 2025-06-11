@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run check-types && next build",
-    "check-types": "tsc --noEmit",
-    "postinstall": "npm install --no-save typescript@latest || exit 0",
+    "check-types": "npx tsc --noEmit",
+    "postinstall": "echo 'Skipping postinstall TypeScript installation'",
     "start": "next start",
     "lint": "next lint"
   },
