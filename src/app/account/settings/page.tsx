@@ -8,35 +8,11 @@ import toast from 'react-hot-toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
-
-interface UserData {
-  name: string;
-  email: string;
-  phone?: string;
-  address?: Address;
-}
-
-interface UserSession {
-  id: string;
-  name: string;
-  email: string;
-  image?: string | null;
-  emailVerified?: Date | null;
-  address?: Address;
-}
-
-interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
 }
 
 interface UserData {
@@ -73,23 +49,53 @@ export default function AccountSettingsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (session?.user) {
-      const user = session.user as UserSession;
-      // Initialize form with user data from session
-      setUserData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: {
-          street: user.address?.street || '',
-          city: user.address?.city || '',
-          state: user.address?.state || '',
-          zipCode: user.address?.zipCode || '',
-          country: user.address?.country || 'United States',
-        },
-      });
-      setIsLoading(false);
-    }
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/account/current');
+        if (response.ok) {
+          const userData = await response.json();
+          const addressData = userData.address || {};
+          
+          setUserData({
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            address: {
+              street: addressData.street || '',
+              city: addressData.city || '',
+              state: addressData.state || '',
+              zipCode: addressData.zipCode || '',
+              country: addressData.country || 'United States'
+            }
+          });
+        } else {
+          // Fallback to session data if API fails
+          const user = session?.user as UserSession | undefined;
+          if (user) {
+            const userAddress = user.address || {};
+            setUserData({
+              name: user.name || '',
+              email: user.email || '',
+              phone: user.phone || '',
+              address: {
+                street: userAddress.street || '',
+                city: userAddress.city || '',
+                state: userAddress.state || '',
+                zipCode: userAddress.zipCode || '',
+                country: userAddress.country || 'United States'
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to load user data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, [session]);
 
   const validateForm = (): boolean => {
