@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import { hash } from 'bcryptjs';
+const bcrypt = require('bcryptjs');
 import { z } from 'zod';
 
 const registerSchema = z.object({
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     // Hash password
-    const hashedPassword = await hash(validatedData.password, 10);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
     // Create new user
     const result = await db.collection('users').insertOne({

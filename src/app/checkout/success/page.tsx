@@ -8,7 +8,7 @@ import { Order } from '@/models/Order';
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
-  const orderNumber = searchParams.get('order');
+  const orderNumber = searchParams?.get('order') || '';
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(!!orderNumber);
 

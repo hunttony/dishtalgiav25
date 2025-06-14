@@ -109,3 +109,18 @@ export const getDb = async () => {
   const { db } = await connectToDatabase();
   return db;
 };
+
+/**
+ * Checks if the MongoDB connection is active
+ * @returns Promise<boolean> True if connection is successful, false otherwise
+ */
+export async function checkMongoDBConnection(): Promise<boolean> {
+  try {
+    const { client } = await connectToDatabase();
+    await client.db().admin().ping();
+    return true;
+  } catch (error) {
+    console.error('MongoDB connection check failed:', error);
+    return false;
+  }
+};

@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import ProductDetail from '@/components/ProductDetail';
 import { Product } from '@/types';
+import { generateMetadata as generateSeoMetadata, generateJsonLd } from '@/lib/seo';
 
 // Mock product data - in a real app, this would come from an API or CMS
-const products: Product[] = [
+export const products: Product[] = [
   {
     id: 1,
     name: "Original Banana Pudding",
@@ -80,19 +81,56 @@ const products: Product[] = [
   }
 ];
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  // In a real app, you would fetch the product data here
-  // For now, we'll use the mock data
-  const product = products.find(p => p.slug === params.slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const product = products.find((p) => p.slug === params.slug);
   
+  if (!product) {
+    return {};
+  }
+
+  return generateSeoMetadata('product', {
+    title: `${product.name} | Dishtalgia`,
+    description: product.description,
+    path: `/products/${product.slug}`,
+    product: {
+      name: product.name,
+      description: product.description,
+      image: product.image,
+      price: product.price,
+    },
+  });
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const product = products.find((p) => p.slug === params.slug);
+
   if (!product) {
     notFound();
   }
 
+  // Generate JSON-LD structured data for the product
+  const jsonLd = generateJsonLd('product', {
+    ...product,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://dishtalgia.com'}/products/${product.slug}`,
+  });
+
   return (
-    <main>
+    <>
+      {/* Add JSON-LD to the page */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProductDetail product={product} />
-    </main>
+    </>
   );
 }
 

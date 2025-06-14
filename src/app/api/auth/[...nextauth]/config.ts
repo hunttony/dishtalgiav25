@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from 'next-auth';
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { clientPromise } from '@/lib/mongodb';
-import { compare } from 'bcryptjs';
+const bcrypt = require('bcryptjs');
 import type { Adapter } from 'next-auth/adapters';
 
 // Extend the built-in session types
@@ -125,7 +125,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('No user found with this email');
         }
 
-        const isValid = await compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error('Invalid password');
         }

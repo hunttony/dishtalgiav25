@@ -1,0 +1,55 @@
+/** @type {import('next').NextConfig} */
+const path = require('path');
+
+// Setup custom error handlers and patches to suppress worker-related errors
+try {
+  // Order matters - module loader patch should be first
+  require('./src/lib/module-loader-patch').setup();
+  require('./src/lib/errorHandler').setup();
+  require('./src/lib/worker-error-handler').setup();
+} catch (error) {
+  console.warn('Failed to setup custom error handlers:', error);
+}
+
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+    ],
+    formats: ['image/webp', 'image/avif'],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'dishtalgia.vercel.app'],
+    },
+    workerThreads: false,
+    cpus: 1,
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+      '@/components': path.resolve(__dirname, 'src/components'),
+      '@/lib': path.resolve(__dirname, 'src/lib'),
+      '@/hooks': path.resolve(__dirname, 'src/hooks'),
+    };
+
+    return config;
+  },
+};
+
+module.exports = nextConfig;

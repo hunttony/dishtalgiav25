@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from './mongodb';
-import { compare } from 'bcryptjs';
+const bcrypt = require('bcryptjs');
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('No user found with this email');
         }
 
-        const isValid = await compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
           throw new Error('Invalid password');
