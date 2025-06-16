@@ -1,50 +1,52 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
-// Check if running in Vercel
-const isVercel = process.env.VERCEL === '1';
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Helper function to safely get hostname from URL
+const getHostname = (url) => {
+  try {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return new URL(url).hostname;
+    }
+    return url.split('/')[0];
+  } catch (e) {
+    return null;
+  }
+};
+
+// Get Vercel URL safely
+const vercelUrl = process.env.VERCEL_URL || '';
+const vercelHostname = vercelUrl ? getHostname(vercelUrl) : null;
+
 const nextConfig = {
-  reactStrictMode: true,
-  // Disable React's Strict Mode in production for better performance
   reactStrictMode: !isProduction,
   
   // Image optimization
   images: {
-    // Configure domains for Next.js Image Optimization
     domains: [
       'images.unsplash.com',
       'plus.unsplash.com',
       'dishtalgia.com',
       'www.dishtalgia.com',
-      // Add Vercel deployment URL if available
-      ...(process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('http')
-        ? [new URL(process.env.VERCEL_URL).hostname]
-        : process.env.VERCEL_URL
-          ? [process.env.VERCEL_URL]
-          : []
-      ),
+      ...(vercelHostname ? [vercelHostname] : []),
     ].filter(Boolean),
-    // Enable image optimization in production
     unoptimized: !isProduction,
   },
   
   // TypeScript configuration
   typescript: {
-    // Enable type checking during build
     ignoreBuildErrors: false,
-    // Show type errors in development
     tsconfigPath: './tsconfig.json',
   },
   
-  // Environment variables that will be available at build time
+  // Environment variables
   env: {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV || 'development',
-    NEXT_PUBLIC_VERCEL_URL: process.env.VERCEL_URL 
-      ? (process.env.VERCEL_URL.startsWith('http') 
-          ? process.env.VERCEL_URL 
-          : `https://${process.env.VERCEL_URL}`)
+    NEXT_PUBLIC_VERCEL_URL: vercelUrl 
+      ? vercelUrl.startsWith('http') 
+        ? vercelUrl 
+        : `https://${vercelUrl}`
       : 'http://localhost:3000',
   },
   webpack: (config) => {
