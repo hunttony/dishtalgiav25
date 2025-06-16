@@ -1,26 +1,42 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
+// Check if running in Vercel
+const isVercel = process.env.VERCEL === '1';
+const isProduction = process.env.NODE_ENV === 'production';
+
 const nextConfig = {
   reactStrictMode: true,
+  // Disable React's Strict Mode in production for better performance
+  reactStrictMode: !isProduction,
+  
+  // Image optimization
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'plus.unsplash.com',
-      },
-    ],
+    // Configure domains for Next.js Image Optimization
+    domains: [
+      'images.unsplash.com',
+      'plus.unsplash.com',
+      'dishtalgia.com',
+      'www.dishtalgia.com',
+      // Add your Vercel deployment URL
+      ...(process.env.VERCEL_URL ? [new URL(process.env.VERCEL_URL).hostname] : []),
+    ].filter(Boolean),
+    // Enable image optimization in production
+    unoptimized: !isProduction,
   },
+  
+  // TypeScript configuration
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
+    // Enable type checking during build
     ignoreBuildErrors: false,
+    // Show type errors in development
+    tsconfigPath: './tsconfig.json',
+  },
+  
+  // Environment variables that will be available at build time
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV || 'development',
+    NEXT_PUBLIC_VERCEL_URL: process.env.VERCEL_URL || 'localhost:3000',
   },
   webpack: (config) => {
     // Add path aliases

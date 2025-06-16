@@ -2,8 +2,16 @@ import { MongoClient, MongoClientOptions, Db } from 'mongodb';
 import { env } from './env';
 
 // These will be validated by env.ts, but we need to ensure type safety
-const MONGODB_URI = env.MONGODB_URI as string;
-const MONGODB_DB = env.MONGODB_DB as string;
+const MONGODB_URI = process.env.MONGODB_URI || env.MONGODB_URI as string;
+const MONGODB_DB = process.env.MONGODB_DB || env.MONGODB_DB as string;
+
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable');
+}
+
+if (!MONGODB_DB) {
+  throw new Error('Please define the MONGODB_DB environment variable');
+}
 
 interface CachedConnection {
   client: MongoClient;

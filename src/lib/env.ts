@@ -1,22 +1,49 @@
 // Environment variable validation
 // This ensures all required environment variables are set when the app starts
 
-const requiredEnvVars = [
+const isProduction = process.env.NODE_ENV === 'production';
+const isVercel = process.env.VERCEL === '1';
+
+// Define base required environment variables
+const baseRequiredVars = [
   'NEXTAUTH_SECRET',
-  'NEXTAUTH_URL',
   'MONGODB_URI',
-  'MONGODB_DB',
+  'MONGODB_DB'
+] as const;
+
+// Add production-only required variables
+const productionRequiredVars = [
+  'NEXTAUTH_URL',
   'NEXT_PUBLIC_SITE_URL'
+] as const;
+
+// Combine required variables based on environment
+const requiredEnvVars = [
+  ...baseRequiredVars,
+  ...(isProduction ? productionRequiredVars : [])
 ] as const;
 
 // Type-safe environment variables
 export const env = {
+  // Core
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  IS_PRODUCTION: isProduction,
+  IS_VERCEL: isVercel,
+  
+  // Auth
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL || (isVercel 
+    ? `https://${process.env.VERCEL_URL}` 
+    : 'http://localhost:3000'),
+  
+  // Database
   MONGODB_URI: process.env.MONGODB_URI,
   MONGODB_DB: process.env.MONGODB_DB,
-  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  
+  // Public
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || (isVercel
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000'),
 } as const;
 
 // Validate environment variables on startup
