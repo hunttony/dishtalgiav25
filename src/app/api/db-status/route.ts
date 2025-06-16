@@ -3,19 +3,18 @@ import { checkMongoDBConnection } from '@/lib/mongodb';
 
 export async function GET() {
   try {
-    const connectionStatus = await checkMongoDBConnection();
+    const isConnected = await checkMongoDBConnection();
     
-    if (connectionStatus.success) {
+    if (isConnected) {
       return NextResponse.json({
         status: 'ok',
         message: 'MongoDB connection successful',
-        details: connectionStatus,
       });
     } else {
       return NextResponse.json({
         status: 'error',
         message: 'MongoDB connection failed',
-        details: connectionStatus,
+        details: { connected: false },
       }, { status: 500 });
     }
   } catch (err) {

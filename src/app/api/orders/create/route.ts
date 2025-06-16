@@ -14,15 +14,16 @@ function generateOrderNumber() {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const { items, paymentId, guestEmail } = await request.json();
     
-    if (!session?.user?.email) {
+    // For guest checkout, guestEmail is required
+    const userEmail = session?.user?.email || guestEmail;
+    if (!userEmail) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
+        { error: 'Email is required for guest checkout' },
+        { status: 400 }
       );
     }
-
-    const { items, paymentId } = await request.json();
     
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -40,7 +41,8 @@ export async function POST(request: Request) {
     
     const orderData: Omit<Order, '_id'> = {
       orderNumber: generateOrderNumber(),
-      userEmail: session.user.email,
+      userEmail,
+      isGuest: !session?.user?.email,
       items: items.map(item => ({
         _id: new ObjectId().toString(),
         productId: item.productId,
@@ -65,12 +67,14 @@ export async function POST(request: Request) {
 
     const result = await db.collection<Order>('orders').insertOne(orderData);
 
-    // Clear the cart
-    await db.collection('carts').updateOne(
-      { userEmail: session.user.email },
-      { $set: { items: [] } },
-      { upsert: true }
-    );
+    // Clear the cart for authenticated users
+    if (session?.user?.email) {
+      await db.collection('carts').updateOne(
+        { userEmail: userEmail },
+        { $set: { items: [] } },
+        { upsert: true }
+      );
+    }
 
     // TODO: Send order confirmation email
 

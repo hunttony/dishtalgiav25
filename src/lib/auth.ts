@@ -1,6 +1,10 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from './mongodb';
+import { URL } from 'url';
+import { env } from './env';
+
+// Using require for bcrypt to avoid TypeScript issues
 const bcrypt = require('bcryptjs');
 
 export const authOptions: NextAuthOptions = {
@@ -23,7 +27,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('No user found with this email');
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(credentials.password.toString(), user.password);
 
         if (!isValid) {
           throw new Error('Invalid password');
@@ -49,9 +53,23 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // If no callbackUrl was set, redirect to account/orders
+      if (url === '/') return `${baseUrl}/account/orders`
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      try {
+        if (new URL(url).origin === baseUrl) return url
+      } catch (e) {
+        return `${baseUrl}/account/orders`
+      }
+      return `${baseUrl}/account/orders`
+    }
   },
   pages: {
     signIn: '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
+  debug: env.NODE_ENV === 'development',
 };

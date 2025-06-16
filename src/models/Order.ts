@@ -25,6 +25,7 @@ export interface OrderBase {
 
 export interface Order extends OrderBase {
   userEmail: string;
+  isGuest: boolean;
   items: OrderItem[];
   subtotal: number;
   tax: number;
