@@ -9,8 +9,6 @@ const requiredEnvVars = [
   'NEXT_PUBLIC_SITE_URL'
 ] as const;
 
-type RequiredEnvVars = typeof requiredEnvVars[number];
-
 // Type-safe environment variables
 export const env = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
