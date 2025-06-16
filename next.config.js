@@ -18,8 +18,13 @@ const nextConfig = {
       'plus.unsplash.com',
       'dishtalgia.com',
       'www.dishtalgia.com',
-      // Add your Vercel deployment URL
-      ...(process.env.VERCEL_URL ? [new URL(process.env.VERCEL_URL).hostname] : []),
+      // Add Vercel deployment URL if available
+      ...(process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('http')
+        ? [new URL(process.env.VERCEL_URL).hostname]
+        : process.env.VERCEL_URL
+          ? [process.env.VERCEL_URL]
+          : []
+      ),
     ].filter(Boolean),
     // Enable image optimization in production
     unoptimized: !isProduction,
@@ -36,7 +41,11 @@ const nextConfig = {
   // Environment variables that will be available at build time
   env: {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV || 'development',
-    NEXT_PUBLIC_VERCEL_URL: process.env.VERCEL_URL || 'localhost:3000',
+    NEXT_PUBLIC_VERCEL_URL: process.env.VERCEL_URL 
+      ? (process.env.VERCEL_URL.startsWith('http') 
+          ? process.env.VERCEL_URL 
+          : `https://${process.env.VERCEL_URL}`)
+      : 'http://localhost:3000',
   },
   webpack: (config) => {
     // Add path aliases
