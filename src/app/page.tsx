@@ -73,7 +73,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-chocolate-brown/60 flex items-center justify-center">
           <div className="text-center text-warm-white px-4 max-w-4xl">
             <h1 className="text-4xl md:text-6xl font-playfair font-bold mb-6">
-              Indulge in Dishstalgia
+              Indulge in Dishtalgia
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
               Handcrafted with love, we make puddings that bring the taste of Southern comfort to your table.
